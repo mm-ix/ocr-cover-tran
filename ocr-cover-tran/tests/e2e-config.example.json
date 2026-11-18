@@ -1,0 +1,22 @@
+{
+  "ScreenshotHotkey": "Ctrl+Alt+X",
+  "SelectionHotkey": "Ctrl+Alt+Z",
+  "OcrLanguage": "auto",
+  "FontMinSize": 8,
+  "FontMaxSize": 24,
+  "BackgroundOpacity": 0.92,
+  "AlignCenter": false,
+  "StatusBarFadeSeconds": 3,
+  "FontFamily": "Microsoft YaHei UI",
+  "TranslationBaseUrl": "",
+  "TranslationApiKey": "",
+  "TranslationModel": "",
+  "TranslationTemperature": 0.2,
+  "TranslationTimeoutSeconds": 20,
+  "ProtectCodeIdentifiers": true,
+  "Glossary": "",
+  "HistoryEnabled": false,
+  "AutoStart": false,
+  "EnableDebugLog": true,
+  "FirstRunDone": true
+}

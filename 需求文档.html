@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>屏幕截图翻译工具 · 需求文档</title>
+<style>
+:root{--bg:#0f1216;--card:#171c23;--line:#28303a;--fg:#e6e9ee;--mut:#9aa4b2;--acc:#5aa9ff;--warn:#ffb648;--ok:#4ec9a0;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.75 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;padding:32px 20px 80px}
+.wrap{max-width:920px;margin:0 auto}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:.5px}
+h2{font-size:19px;margin:38px 0 12px;padding-left:12px;border-left:4px solid var(--acc)}
+h3{font-size:16px;margin:22px 0 8px;color:#cfd8e3}
+p{color:var(--fg)}
+blockquote{margin:14px 0;padding:12px 16px;background:rgba(90,169,255,.08);border-left:3px solid var(--acc);color:#cfe0f5;border-radius:0 8px 8px 0}
+blockquote p{margin:0}
+code{background:#20262e;padding:1px 5px;border-radius:4px;font-size:13px;color:#9ed0ff}
+pre{background:#12171d;border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto}
+pre code{background:none;padding:0;color:#cfd8e3;font-size:13px;line-height:1.6}
+.tw{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:520px}
+th{background:#1d242c;text-align:left;padding:10px 12px;color:#b9c6d6;font-weight:600;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid #20262e;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(90,169,255,.04)}
+ul,ol{padding-left:22px}
+li{margin:4px 0}
+li.todo{list-style:none;margin-left:-18px;color:#cfd8e3}
+hr{border:none;border-top:1px solid var(--line);margin:34px 0}
+strong{color:#fff}
+.meta{color:var(--mut);font-size:13px;margin-bottom:26px}
+</style></head><body><div class="wrap">
+<h1>屏幕截图翻译工具 需求文档</h1>
+<blockquote>
+<p>文档版本：v1.0 ｜ 创建：2026-11-04 ｜ 状态：待评审
+目标平台：Windows 10 19044+ / Windows 11，x64 绿色免安装
+代号：<code>ShotTrans</code>（暂定）</p>
+</blockquote>
+<hr />
+<h2>1. 背景</h2>
+<p>用户需要一个<strong>和网易有道截图翻译、UU 加速器游戏翻译同形态</strong>的工具：</p>
+<blockquote>
+<p>按快捷键 → 拖框选择屏幕区域 → 译文出现在原文字位置、盖住原文 → 用完即消失。</p>
+</blockquote>
+<p>现有开源方案都不满足这个形态：</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>方案</th>
+<th>不满足的点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LunaTranslator（14k★）</td>
+<td>OCR 是「选区常驻 + 周期识别」，不是一次性；关闭要单独一步</td>
+</tr>
+<tr>
+<td>pot（19.3k★，已归档）</td>
+<td>图片翻译输出新图；截图翻译结果在独立窗口，无原位覆盖</td>
+</tr>
+<tr>
+<td>BallonsTranslator（5.2k★）</td>
+<td>必须先有图片文件，无截图入口</td>
+</tr>
+<tr>
+<td>manga-image-translator（10.5k★）</td>
+<td>CLI / Web 服务，无 GUI 热键</td>
+</tr>
+<tr>
+<td>LightTranslate（0★）</td>
+<td>形态正确，但单屏假设、半年前停更、无设置界面</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>结论：自研一个轻量外壳（约 1,500 行 C#），覆盖层自写，OCR 与翻译复用成熟组件。</strong></p>
+<hr />
+<h2>2. 目标与非目标</h2>
+<h3>2.1 目标</h3>
+<ol>
+<li>一次热键，从框选到看到译文 <strong>≤ 2 秒</strong>（本地 OCR + 云端翻译）。</li>
+<li>译文<strong>按原文字块位置覆盖</strong>，字号自适应、不溢出原框。</li>
+<li>用完即走：Esc / 右键 / 点击外部立刻消失，不留常驻窗口。</li>
+<li>翻译走<strong>用户自己的 OpenAI 兼容接口</strong>（ccx 网关 / 阿里百炼 / DeepSeek 任一），可随时切换。</li>
+<li>绿色版：解压即用，不写注册表，不装运行时。</li>
+</ol>
+<h3>2.2 非目标（本期不做）</h3>
+<ul>
+<li>❌ 实时/连续翻译（LUNA 那种视频字幕模式）</li>
+<li>❌ 手机端、macOS、Linux</li>
+<li>❌ 多语言界面（只做简体中文 UI）</li>
+<li>❌ 漫画批量翻译、PDF 翻译、文档翻译</li>
+<li>❌ 账号体系、云同步、翻译记忆库</li>
+</ul>
+<hr />
+<h2>3. 用户与场景</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>描述</th>
+<th>关键诉求</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>英文软件界面</td>
+<td>打开一个英文软件，看不懂菜单/设置项</td>
+<td>快、不打断操作</td>
+</tr>
+<tr>
+<td>游戏 / 视频硬字幕</td>
+<td>无字幕或外语字幕</td>
+<td>位置贴合，不挡其他画面</td>
+</tr>
+<tr>
+<td>报错 / 技术文档</td>
+<td>截图里有代码、命令、术语</td>
+<td>代码和专有名词不许乱翻</td>
+</tr>
+<tr>
+<td>网页 / PDF 图表</td>
+<td>只有图片，选不中文字</td>
+<td>保留版式，能对照原文</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>使用频率预期：每天 5~30 次，单次停留 3~30 秒。</strong></p>
+<hr />
+<h2>4. 核心流程</h2>
+<pre><code>① 全局热键（默认 Ctrl+Alt+X）
+      ↓
+② 屏幕变暗，进入框选；拖出矩形（显示尺寸像素）
+      ↓
+③ 截图该区域（原分辨率）
+      ↓
+④ 本地 OCR → 得到每个文字块的文本 + 边界框
+      ↓
+⑤ 批量翻译（按块合并成一次请求，保留顺序）
+      ↓
+⑥ 覆盖层出现：每个框内绘制译文，背景取原图局部颜色
+      ↓
+⑦ 阅读中：按住 Space 临时隐藏译文看原文
+      ↓
+⑧ Esc / 右键 / 点击外部 → 全部销毁
+</code></pre>
+<p><strong>异常路径</strong></p>
+<ul>
+<li>OCR 无文字 → 提示「没识别到文字」，1 秒后自动关闭</li>
+<li>翻译失败 → 覆盖层显示原文 + 顶部红色提示「翻译失败：&lt;原因&gt;」，按 R 重试</li>
+<li>区域过小（&lt; 40×20 px）→ 忽略，不进入流程</li>
+</ul>
+<hr />
+<h2>5. 功能需求</h2>
+<h3>P0（不做完不能用）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>编号</th>
+<th>需求</th>
+<th>验收要点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-01</td>
+<td>全局热键触发框选，可改键</td>
+<td>在任意前台程序（含全屏 borderless 游戏）按下即响应</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>框选交互：全屏半透明遮罩、实时显示选区尺寸、右键/Esc 取消</td>
+<td>显示 <code>宽×高</code>，取消后无残留</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>截图：按物理像素抓取选区</td>
+<td>125%/150% 缩放下框选范围与截图范围一致</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>本地 OCR：Windows.Media.Ocr</td>
+<td>中文、英文识别可用；返回逐行文本 + 边界框</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>翻译：OpenAI 兼容 <code>/chat/completions</code></td>
+<td>配置 base_url / api_key / model 后可用；超时 20s</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>原位覆盖：每块文字画在原边界框内</td>
+<td>译文不超出框、不重叠邻块；框过小自动缩小字号</td>
+</tr>
+<tr>
+<td>F-07</td>
+<td>覆盖层样式：背景取原图局部主色，文字色按背景亮度自动黑/白</td>
+<td>深色底出白字、浅色底出黑字，肉眼可读</td>
+</tr>
+<tr>
+<td>F-08</td>
+<td>覆盖层不拦截鼠标</td>
+<td>覆盖期间可以点下面的窗口（除 Esc 外不响应键盘）</td>
+</tr>
+<tr>
+<td>F-09</td>
+<td>关闭：Esc / 右键 / 点击外部</td>
+<td>三者任一都能销毁，且可立即再次触发</td>
+</tr>
+<tr>
+<td>F-10</td>
+<td>对比：按住 Space 显示原文</td>
+<td>松开恢复译文；不重新请求翻译</td>
+</tr>
+<tr>
+<td>F-11</td>
+<td>翻译结果可复制</td>
+<td>Ctrl+C 复制全部译文（按阅读顺序拼接）</td>
+</tr>
+</tbody>
+</table></div>
+<h3>P1（第一版应该有）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>编号</th>
+<th>需求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-12</td>
+<td>多显示器支持</td>
+<td>在副屏框选、跨屏框选都要正常</td>
+</tr>
+<tr>
+<td>F-13</td>
+<td>高 DPI 适配（100%~200%）</td>
+<td>Win10 每屏不同缩放也要正确</td>
+</tr>
+<tr>
+<td>F-14</td>
+<td>截图时排除自己</td>
+<td>用 <code>SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)</code>，避免覆盖层被二次识别</td>
+</tr>
+<tr>
+<td>F-15</td>
+<td>设置界面</td>
+<td>热键、接口、模型、字体大小范围、背景不透明度、超时</td>
+</tr>
+<tr>
+<td>F-16</td>
+<td>术语保护</td>
+<td>用户词表 + 正则：<code>[A-Za-z_][A-Za-z0-9_]*</code> 代码标识符不进翻译；术语按表替换</td>
+</tr>
+<tr>
+<td>F-17</td>
+<td>托盘常驻 + 开机自启开关</td>
+<td>托盘右键：截图翻译 / 设置 / 退出</td>
+</tr>
+<tr>
+<td>F-18</td>
+<td>历史记录（本地）</td>
+<td>最近 200 条：缩略图 + 原文 + 译文，可复制/删除；存 SQLite</td>
+</tr>
+<tr>
+<td>F-19</td>
+<td>失败可重试</td>
+<td>顶部提示条 + <code>R</code> 重试（复用已截图的图，不重截）</td>
+</tr>
+</tbody>
+</table></div>
+<h3>P2（以后再说）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>编号</th>
+<th>需求</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-20</td>
+<td>PaddleOCR（PP-OCRv5）作为第二引擎，中文小字/复杂背景更准</td>
+</tr>
+<tr>
+<td>F-21</td>
+<td>日文竖排识别与竖排回填</td>
+</tr>
+<tr>
+<td>F-22</td>
+<td>拖入图片文件直接翻译（复用同一套渲染）</td>
+</tr>
+<tr>
+<td>F-23</td>
+<td>划词翻译（选中文本+热键）</td>
+</tr>
+<tr>
+<td>F-24</td>
+<td>多模态兜底：OCR 失败时整块图丢给 qwen-vl 直接出译文与坐标</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2>6. 非功能需求</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>指标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>性能</td>
+<td>热键→覆盖出现：本地 OCR ≤ 300ms，翻译 ≤ 1.5s（20 行以内），端到端 P95 ≤ 2.5s</td>
+</tr>
+<tr>
+<td>体积</td>
+<td>绿色目录 ≤ 40 MB（自包含 .NET，不含 OCR 额外模型）</td>
+</tr>
+<tr>
+<td>依赖</td>
+<td>Windows 10 19044+；无需安装 .NET 运行时；无需管理员权限</td>
+</tr>
+<tr>
+<td>隐私</td>
+<td>截图与 OCR 结果只在内存；仅「文字」发往用户配置的翻译接口；不上传图片（P2 多模态除外，且需明确开关）</td>
+</tr>
+<tr>
+<td>稳定性</td>
+<td>连续触发 100 次不崩溃、不残留窗口；异常退出后可再次启动</td>
+</tr>
+<tr>
+<td>兼容性</td>
+<td>普通窗口 / 全屏 borderless / 多屏 / 远程桌面（RDP 内可用）</td>
+</tr>
+<tr>
+<td>已知限制</td>
+<td>独占全屏（Exclusive Fullscreen）游戏无法截取 → 提示改用无边框</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2>7. 技术方案（选型说明）</h2>
+<pre><code>语言/框架   C# / .NET 8 + WPF（自包含发布，单目录绿色）
+热键        RegisterHotKey（WH_KEYBOARD_LL 作为备用）
+框选窗口    全屏 WS_EX_LAYERED + WS_EX_TOOLWINDOW，每屏一个
+截图        BitBlt（GDI）优先；失败回退 Windows.Graphics.Capture
+OCR         Windows.Media.Ocr（系统自带，零依赖）
+            备选 PaddleOCR（onnxruntime，P2）
+翻译        HttpClient → OpenAI 兼容 /chat/completions
+覆盖渲染    逐像素透明窗口（UpdateLayeredWindow）+ DirectWrite 排版
+            · 字号：从 max 开始二分，直到文本块宽高 ≤ 原框
+            · 背景：原图局部中位色，圆角矩形
+            · 点击穿透：WS_EX_TRANSPARENT + WS_EX_NOACTIVATE
+配置        %APPDATA%\ShotTrans\config.json（或程序目录，绿色优先）
+</code></pre>
+<p><strong>为什么不用 Tauri/Electron</strong>：覆盖层要逐像素透明 + 点击穿透 + 精确文字排版，原生窗口 API 一步到位；JS 壳反而要绕。</p>
+<hr />
+<h2>8. 界面与交互细节</h2>
+<pre><code>框选态
+  · 全屏暗化 40%，选区高亮
+  · 十字光标，实时显示「640 × 220」
+  · Esc / 右键取消
+
+结果态
+  · 无边框、无标题栏、无阴影
+  · 每个文字块：圆角背景 + 译文（居中/左对齐可选）
+  · 顶部悬浮小条：显示「已翻译 12 块 · 1.2s」+ 提示「Space 看原文 / Esc 关闭」
+  · 3 秒后小条自动淡出，只留译文
+
+设置页（单页，两栏）
+  左：热键、OCR 语言、字体大小上下限、背景不透明度
+  右：翻译接口（base_url / key / model / 温度）、术语表
+</code></pre>
+<hr />
+<h2>9. 验收清单（逐条可测）</h2>
+<ul>
+<li class="todo">☐ 按下热键，屏幕变暗并进入框选</li>
+<li class="todo">☐ 拖出一个区域，松手后 ≤ 2.5s 出现译文</li>
+<li class="todo">☐ 译文在原文位置上，不溢出、不压到相邻块</li>
+<li class="todo">☐ 深色背景出白字，浅色背景出黑字</li>
+<li class="todo">☐ 覆盖期间点击下方窗口能正常操作</li>
+<li class="todo">☐ 按住 Space 看到原文，松开回到译文</li>
+<li class="todo">☐ Esc / 右键 / 点外部，三种方式都能关闭</li>
+<li class="todo">☐ 关闭后可立刻再次触发，不残留任何窗口</li>
+<li class="todo">☐ 125% 缩放下框选与截图范围一致</li>
+<li class="todo">☐ 副屏框选正常（多显示器）</li>
+<li class="todo">☐ 翻译接口填错时，提示明确且可按 R 重试</li>
+<li class="todo">☐ 代码标识符（如 <code>GetProcAddress</code>）不被翻译</li>
+<li class="todo">☐ 连续触发 50 次无崩溃、无内存持续增长</li>
+</ul>
+<hr />
+<h2>10. 里程碑</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>内容</th>
+<th>工期</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D1</td>
+<td>骨架：热键 → 框选 → 截图 → Windows OCR，输出文字+坐标到控制台</td>
+<td>1 天</td>
+</tr>
+<tr>
+<td>D2</td>
+<td>翻译接入 + 覆盖层初版（能看，排版糙）</td>
+<td>1 天</td>
+</tr>
+<tr>
+<td>D3</td>
+<td>排版打磨：字号自适应、背景取色、点击穿透、Space 对比、Esc 关闭</td>
+<td>1 天</td>
+</tr>
+<tr>
+<td>D4</td>
+<td>多屏/DPI、排除自身截图、异常兜底、设置页</td>
+<td>1 天</td>
+</tr>
+<tr>
+<td>D5</td>
+<td>打包绿色版 + 验收清单逐条过 + 文档</td>
+<td>1 天</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>合计 5 个工作日</strong>（不含需求变更）。</p>
+<hr />
+<h2>11. 风险与对策</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>风险</th>
+<th>影响</th>
+<th>对策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Windows OCR 对小字/复杂背景识别差</td>
+<td>译文不全</td>
+<td>P0 先接受；P2 挂 PaddleOCR；极端情况用多模态兜底</td>
+</tr>
+<tr>
+<td>字号自适应后中文换行难看</td>
+<td>观感差</td>
+<td>允许"整体缩小 + 2 行截断 + 省略号"，并支持手动调字号</td>
+</tr>
+<tr>
+<td>独占全屏游戏截不到</td>
+<td>场景缺失</td>
+<td>首次失败提示改用无边框窗口（Borderless）</td>
+</tr>
+<tr>
+<td>翻译接口延迟高</td>
+<td>体感慢</td>
+<td>支持并发分块请求 + 缓存相同文本（同一块重复出现直接复用）</td>
+</tr>
+<tr>
+<td>用户环境无 .NET</td>
+<td>起不来</td>
+<td>自包含发布（含运行时），目录大一点但零依赖</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2>12. 待确认项</h2>
+<ol>
+<li>目标语言只做「外语 → 中文」，还是也要「中文 → 英文」？</li>
+<li>翻译接口首选哪个（ccx 网关 / 百炼 / DeepSeek）？需要默认预置一个吗？</li>
+<li>是否需要「静止不动就自动重翻同一区域」的轻量开关（介于一次性与常驻之间）？</li>
+<li>历史记录要不要留（涉及磁盘占用与隐私）？</li>
+</ol>
+</div></body></html>

@@ -1,0 +1,76 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>ShotTrans</AssemblyName>
+    <RootNamespace>ShotTrans</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>assets\app.ico</ApplicationIcon>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <Version>1.0.0</Version>
+    <Product>ShotTrans 截图翻译</Product>
+    <AssemblyTitle>ShotTrans 截图翻译</AssemblyTitle>
+    <FileVersion>1.0.0.0</FileVersion>
+    <SatelliteResourceLanguages>zh-Hans;en</SatelliteResourceLanguages>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <RestorePackagesPath>..\..\packages</RestorePackagesPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
+  </ItemGroup>
+
+  <!--
+    WinForms 会带来自包含的整个 WindowsDesktop 运行时，其中 WPF 与设计器程序集约 50MB。
+    本应用只用 WinForms + GDI+，单文件发布时从 bundle 中移除这些未被引用的程序集，以满足绿色版体积目标。
+  -->
+  <Target Name="ShotTrans_RemoveUnusedDesktopAssemblies"
+          AfterTargets="_ComputeFilesToBundle"
+          BeforeTargets="PrepareForBundle;GenerateSingleFileBundle"
+          Condition="'$(PublishSingleFile)' == 'true'">
+    <ItemGroup>
+      <FilesToBundle Remove="@(FilesToBundle)"
+          Condition="$([System.String]::Copy('%(Filename)').StartsWith('PresentationFramework'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('PresentationCore'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('PresentationUI'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('PresentationNative'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('WindowsBase'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('System.Xaml'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('System.Printing'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('System.IO.Packaging'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('ReachFramework'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('WindowsFormsIntegration'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('System.Windows.Forms.Design'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('D3DCompiler_47_cor3'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('wpfgfx_cor3'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('PenImc_cor3'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('vcruntime140_cor3'))" />
+      <_FilesToBundle Remove="@(_FilesToBundle)"
+          Condition="$([System.String]::Copy('%(Filename)').StartsWith('PresentationFramework'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('PresentationCore'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('PresentationUI'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('PresentationNative'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('WindowsBase'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('System.Xaml'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('System.Printing'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('System.IO.Packaging'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('ReachFramework'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('WindowsFormsIntegration'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('System.Windows.Forms.Design'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('D3DCompiler_47_cor3'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('wpfgfx_cor3'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('PenImc_cor3'))
+                     Or $([System.String]::Copy('%(Filename)').StartsWith('vcruntime140_cor3'))" />
+    </ItemGroup>
+    <Message Importance="high" Text="ShotTrans: removed unused WPF/designer assemblies from single-file bundle." />
+  </Target>
+
+</Project>
